@@ -5,86 +5,104 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public float speed;
-
     public int positionOfPatrol;
     public Transform point;
-    bool moveingRight;
+    bool movingRight;
     public float stoppingDistance;
-    bool chill = false;
-    bool angry = false;
-    bool goBack = false;
+    public int damage = 1;
+    public float attackRate = 1f;
+    private float nextAttackTime = 0f;
 
-    
-    //Transform player;
+    private bool chill = false;
+    private bool angry = false;
+    private bool goBack = false;
+
     public GameObject player;
+    private HealthSystem playerHealth;
 
     void Start()
     {
-        
-
-        //player = GameObject.FindGameObjectWithTag("Player").transform;
+        playerHealth = player.GetComponent<HealthSystem>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if(Vector3.Distance(transform.position, point.position) < positionOfPatrol && angry == false);
+        float playerDistance = Vector3.Distance(transform.position, player.transform.position);
+        float pointDistance = Vector3.Distance(transform.position, point.position);
+
+        if (pointDistance < positionOfPatrol && !angry)
         {
             chill = true;
         }
-        if(Vector3.Distance(transform.position, player.transform.position) < stoppingDistance)
+
+        if (playerDistance < stoppingDistance)
         {
             angry = true;
             chill = false;
-            goBack = false ;
+            goBack = false;
         }
-        if (Vector3.Distance(transform.position,player.transform.position) > stoppingDistance)
+        else if (playerDistance > stoppingDistance)
         {
             goBack = true;
             angry = false;
         }
-        if (chill == true)
+
+        if (chill)
         {
             Chill();
         }
-        else if (angry == true)
+        else if (angry)
         {
             Angry();
         }
-        else if (goBack == true) 
-        { 
+        else if (goBack)
+        {
             GoBack();
         }
     }
 
     void Chill()
     {
-        if(transform.position.x > point.position.x + positionOfPatrol)
+        if (transform.position.x > point.position.x + positionOfPatrol)
         {
-            moveingRight = false;
+            movingRight = false;
         }
         else if (transform.position.x < point.position.x - positionOfPatrol)
         {
-            moveingRight=true;
+            movingRight = true;
         }
 
-        if(moveingRight)
+        if (movingRight)
         {
-            transform.position = new Vector3(transform.position.x + speed*Time.deltaTime, 0.5029546f, 4.014f);
+            transform.position += new Vector3(speed * Time.deltaTime, 0, 0);
         }
         else
         {
-            transform.position = new Vector3(transform.position.x - speed*Time.deltaTime, 0.5029546f, 4.014f);
+            transform.position -= new Vector3(speed * Time.deltaTime, 0, 0);
         }
     }
 
     void Angry()
     {
-        transform.position = Vector3.MoveTowards(transform.position, player.transform.position,speed*Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, player.transform.position, speed * Time.deltaTime);
+        if (Time.time >= nextAttackTime && Vector3.Distance(transform.position, player.transform.position) < stoppingDistance)
+        {
+            playerHealth.TakeDamage(damage);
+            nextAttackTime = Time.time + 1f / attackRate;
+        }
     }
 
     void GoBack()
     {
         transform.position = Vector3.MoveTowards(transform.position, point.position, speed * Time.deltaTime);
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.CompareTag("Player") && Time.time >= nextAttackTime)
+        {
+            playerHealth.TakeDamage(damage);
+            nextAttackTime = Time.time + 1f / attackRate;
+        }
     }
 }

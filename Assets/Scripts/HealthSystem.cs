@@ -5,45 +5,52 @@ using UnityEngine.UI;
 
 public class HealthSystem : MonoBehaviour
 {
-    // Start is called before the first frame update
     public int health;
     public int numberOfLives;
 
     public Image[] lives;
 
     public Sprite fullLive;
-    public Sprite empthyLive;
+    public Sprite emptyLive;
 
     void Start()
     {
-        
+        UpdateLivesUI();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (health>numberOfLives)
+        if (health > numberOfLives)
         {
             health = numberOfLives;
         }
-        for(int i = 0; i < lives.Length; i++)
+        UpdateLivesUI();
+    }
+
+    void UpdateLivesUI()
+    {
+        for (int i = 0; i < lives.Length; i++)
         {
-            if(i < health)
+            if (i < health)
             {
                 lives[i].sprite = fullLive;
             }
             else
             {
-                lives[i].sprite = empthyLive;
+                lives[i].sprite = emptyLive;
             }
-            if(i<numberOfLives)
-            {
-                lives[i].enabled = true;
-            }
-            else
-            {
-                lives[i].enabled = false;
-            }
+
+            lives[i].enabled = i < numberOfLives;
         }
+    }
+
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
+        if (health < 0)
+        {
+            health = 0;
+        }
+        UpdateLivesUI();
     }
 }
