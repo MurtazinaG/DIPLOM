@@ -5,35 +5,49 @@ using UnityEngine;
 
 public class EnterTrigger : MonoBehaviour
 {
-
+    bool canPickUp;
     public float angle;
     public float line = 1.5f;
-    public GameObject block;
-    int charOn = 0;
+    public GameObject Bag;
+
+    public Transform startPoint; // Начальная точка
+    public Transform endPoint;   // Конечная точка
+    public float speed = 1.0f;
 
     [SerializeField] private Animator animator_l;
 
-    public GameObject target1;
-    public GameObject target2;
+    private void Start()
+    {
+        // Подписываемся на событие изменения NumOn
+        ValueManager.Instance.OnNumOnChanged += OnNumOnChanged;
+    }
 
+    private void OnDestroy()
+    {
+        // Отписываемся от события изменения NumOn
+        ValueManager.Instance.OnNumOnChanged -= OnNumOnChanged;
+    }
 
     // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.E)) PickUp();
         if (Input.GetKeyDown(KeyCode.Q)) Drop();
-        if (charOn == 1)
+
+        float step = speed * Time.deltaTime; // Вычисляем, какое расстояние пройти за этот кадр
+
+        int numOn = ValueManager.Instance.NumOn;
+
+        if (numOn == 1)
         {
-            block.transform.position = Vector3.Lerp(block.transform.position, target1.transform.position, Time.deltaTime);
-
+            Bag.transform.position = Vector3.MoveTowards(Bag.transform.position, endPoint.position, step);
         }
-        else if (charOn == 2)
+        else if (numOn == 2)
         {
-            block.transform.position = Vector3.Lerp(block.transform.position, target2.transform.position, Time.deltaTime);
-
+            Bag.transform.position = Vector3.MoveTowards(Bag.transform.position, startPoint.position, step);
         }
-
     }
+
     void PickUp()
     {
         RaycastHit hit;
@@ -42,20 +56,20 @@ public class EnterTrigger : MonoBehaviour
         Ray ray = new Ray(transform.position, direction);
 
         Physics.Raycast(ray, out hit);
+
         Debug.DrawLine(ray.origin, ray.origin + ray.direction * line, Color.yellow);
 
-
-        if (Physics.Raycast(transform.position, direction, line))
+        if (Physics.Raycast(transform.position, direction, line)) // для предметов
         {
+            print(hit);
             if (hit.transform.tag == "Lever1")
             {
                 animator_l.SetBool("OnOff", true);
-                charOn = 1;
 
+                // Устанавливаем значение NumOn через ValueManager
+                ValueManager.Instance.NumOn = 1;
             }
         }
-
-
     }
 
     void Drop()
@@ -70,20 +84,21 @@ public class EnterTrigger : MonoBehaviour
 
         Physics.Raycast(ray, out hit);
 
-
-
-        if (Physics.Raycast(transform.position, direction, line))// для предметов
+        if (Physics.Raycast(transform.position, direction, line)) // для предметов
         {
             if (hit.transform.tag == "Lever1")
             {
                 animator_l.SetBool("OnOff", false);
-                charOn = 2;
 
-
+                // Устанавливаем значение NumOn через ValueManager
+                ValueManager.Instance.NumOn = 2;
             }
         }
+    }
 
+    private void OnNumOnChanged(int newNumOn)
+    {
+        // Действия при изменении значения NumOn (если необходимо)
+        // Например, логика отображения изменений на персонаже
     }
 }
-
-
