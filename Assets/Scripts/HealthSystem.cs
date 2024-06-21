@@ -7,9 +7,7 @@ public class HealthSystem : MonoBehaviour
 {
     public int health;
     public int numberOfLives;
-
     public Image[] lives;
-
     public Sprite fullLive;
     public Sprite emptyLive;
 
@@ -46,6 +44,7 @@ public class HealthSystem : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        Debug.Log("Player takes damage: " + damage);
         health -= damage;
         if (health < 0)
         {
