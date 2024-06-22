@@ -1,19 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-    // Start is called before the first frame update
     public CharacterController controller;
-    [SerializeField]private Animator animator;
-    Vector3 startGamePosition;
-    Quaternion startGameRotation;
-    Vector3 targetPos;
-    float laneOffset = 1.0f;
+    [SerializeField] private Animator animator;
+    private Vector3 startGamePosition;
+    private Quaternion startGameRotation;
+    private Vector3 targetPos;
+    private float laneOffset = 1.0f;
     public float laneChangeSpeed = 6.0f;
     public float angle;
     public float lined = 1.5f;
@@ -22,17 +18,20 @@ public class PlayerController : MonoBehaviour
     public GameObject WinMenuUI;
 
     private Vector3 targetPosition;
-    public float smoothSpeed = 2.0f; // Скорость плавного перемещения
+    public float smoothSpeed = 2.0f;
+
+    public int bombCount = 0; // Количество бомб у игрока
+    public GameObject bombPrefab; // Префаб бомбы
+    public Transform bombSpawnPoint; // Точка, откуда бомба будет выброшена
+    public float throwForce = 10f; // Сила броска
+    public float throwAngle = 45f; // Угол броска
 
     void Start()
     {
-        
         startGamePosition = transform.position;
         startGameRotation = transform.rotation;
-        
     }
 
-    // Update is called once per frame
     void Update()
     {
         startGameRotation = transform.rotation;
@@ -42,29 +41,21 @@ public class PlayerController : MonoBehaviour
 
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
-
-
-        //Анимация персонажа
         if (direction.magnitude >= 0.1f)
         {
             animator.SetBool("isMoving", true);
-           
-
         }
         else
         {
             animator.SetBool("isMoving", false);
-            
         }
 
         if (direction.magnitude >= 0.1f)
         {
-            
             if (horizontal < 0)
             {
                 if (CanMoveInDirection(Vector3.left))
                 {
-                    //StartCoroutine(SwitchWithDelay());
                     controller.Move(Vector3.left * laneChangeSpeed * Time.deltaTime);
                 }
             }
@@ -72,7 +63,6 @@ public class PlayerController : MonoBehaviour
             {
                 if (CanMoveInDirection(Vector3.right))
                 {
-                    //StartCoroutine(SwitchWithDelay());
                     controller.Move(Vector3.right * laneChangeSpeed * Time.deltaTime);
                 }
             }
@@ -81,7 +71,6 @@ public class PlayerController : MonoBehaviour
             {
                 if (CanMoveInDirection(Vector3.forward))
                 {
-                    //StartCoroutine(SwitchWithDelay());
                     controller.Move(Vector3.forward * laneChangeSpeed * Time.deltaTime);
                 }
             }
@@ -89,40 +78,35 @@ public class PlayerController : MonoBehaviour
             {
                 if (CanMoveInDirection(Vector3.back))
                 {
-                    //StartCoroutine(SwitchWithDelay());
                     controller.Move(Vector3.back * laneChangeSpeed * Time.deltaTime);
                 }
             }
         }
         else
         {
-            // Если персонаж не движется, переместим его в центр ближайшего объекта
             MoveToCenterOfCurrentObject();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && bombCount > 0)
+        {
+            ThrowBomb();
         }
     }
 
-    IEnumerator SwitchWithDelay()  //для паузы
+    IEnumerator SwitchWithDelay()
     {
         yield return new WaitForSeconds(3f);
-
     }
-        void MoveToCenterOfCurrentObject()
+
+    void MoveToCenterOfCurrentObject()
     {
         RaycastHit hit;
-        // Отправляем луч вниз из текущей позиции персонажа
         if (Physics.Raycast(transform.position, Vector3.down, out hit))
         {
-            // Получаем коллайдер объекта, на котором стоит персонаж
             Collider collider = hit.collider;
-
-            // Вычисляем целевую позицию как центр коллайдера плюс половина его размера по вертикали
             Vector3 center = collider.bounds.center;
-
             targetPosition = center + new Vector3(0f, 0.5f, 0f) + Vector3.up * collider.bounds.extents.y;
-
-            // Запускаем корутину для плавного перемещения
             StartCoroutine(MoveToTarget());
-            
         }
     }
 
@@ -130,29 +114,22 @@ public class PlayerController : MonoBehaviour
     {
         while (Vector3.Distance(transform.position, targetPosition) > 0.05f)
         {
-            // Плавно перемещаем персонажа к целевой позиции
             transform.position = Vector3.Lerp(transform.position, targetPosition, smoothSpeed * Time.deltaTime);
             yield return null;
         }
     }
 
-
     bool CanMoveInDirection(Vector3 direction)
     {
-
         if (direction != Vector3.zero)
         {
             Quaternion lookRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 1000);
-
-
         }
         SwitchWithDelay();
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, direction, out hit, lined-0.9f))
+        if (Physics.Raycast(transform.position, direction, out hit, lined - 0.9f))
         {
-            // Если впереди есть объект, возвращаем false
-           
             if (hit.transform.tag == "Player")
             {
                 animator.SetBool("Dance", true);
@@ -160,26 +137,54 @@ public class PlayerController : MonoBehaviour
                 Time.timeScale = 0f;
                 GameIsPaused = true;
             }
-            
             return false;
         }
 
-        // Проверяем доступность пути под углом 45 градусов
         direction = Quaternion.AngleAxis(angle, transform.right) * transform.forward;
-
         Ray ray = new Ray(transform.position, direction);
-
-        //Debug.DrawLine(ray.origin, ray.origin + ray.direction * lined, Color.red);
 
         if (Physics.Raycast(transform.position, direction, lined))
         {
-            // Если по диагонали есть объект, возвращаем true
-            
             return true;
-
         }
-        
-        return false;
 
+        return false;
+    }
+
+    void ThrowBomb()
+    {
+        GameObject bomb = Instantiate(bombPrefab, bombSpawnPoint.position, bombSpawnPoint.rotation);
+        Rigidbody rb = bomb.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            // Рассчитываем направление броска под углом, учитывая ориентацию персонажа
+            Vector3 throwDirection = CalculateThrowDirection();
+            rb.AddForce(throwDirection * throwForce, ForceMode.VelocityChange);
+        }
+        bombCount--;
+    }
+
+    Vector3 CalculateThrowDirection()
+    {
+        // Переводим угол в радианы
+        float angleInRadians = throwAngle * Mathf.Deg2Rad;
+        // Вычисляем компоненты направления
+        float y = Mathf.Sin(angleInRadians);
+        float z = Mathf.Cos(angleInRadians);
+        // Получаем направление, куда смотрит персонаж
+        Vector3 forward = transform.forward;
+        // Создаем вектор направления броска, учитывая угол
+        Vector3 throwDirection = forward * z + Vector3.up * y;
+        return throwDirection.normalized;
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("BombPickup"))
+        {
+            bombCount++;
+            Debug.Log("Bomb picked up. Current bomb count: " + bombCount);
+            Destroy(other.gameObject);
+        }
     }
 }

@@ -10,6 +10,7 @@ public class Enemy : MonoBehaviour
     public float stoppingDistance;
     public int damage = 1;
     public float attackRate = 1f;
+    public int health = 3; // Количество здоровья врага
 
     private float nextAttackTime = 0f;
     private bool movingRight;
@@ -100,7 +101,6 @@ public class Enemy : MonoBehaviour
 
         if (Time.time >= nextAttackTime && Vector3.Distance(transform.position, targetPlayer.transform.position) < stoppingDistance)
         {
-            
             AttackPlayer();
         }
     }
@@ -121,17 +121,12 @@ public class Enemy : MonoBehaviour
             sharedHealthSystem.TakeDamage(damage);
             nextAttackTime = Time.time + 1f / attackRate;
         }
-        else
-        {
-            
-        }
     }
 
     void OnTriggerStay(Collider other)
     {
         if (other.gameObject.CompareTag("Player") && Time.time >= nextAttackTime)
         {
-            
             AttackPlayer();
         }
     }
@@ -162,6 +157,17 @@ public class Enemy : MonoBehaviour
             float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
             angle = Mathf.Round(angle / 90) * 90; // Принудительный поворот на 90 градусов
             transform.rotation = Quaternion.Euler(0, angle, 0);
+        }
+    }
+
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
+        Debug.Log("Enemy took damage, current health: " + health);
+        if (health <= 0)
+        {
+            Destroy(gameObject);
+            Debug.Log("Enemy destroyed");
         }
     }
 }

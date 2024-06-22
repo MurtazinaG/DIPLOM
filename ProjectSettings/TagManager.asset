@@ -9,16 +9,18 @@ TagManager:
   - Lever
   - DialoguePanel
   - Lever1
+  - BombPickup
+  - Enemy
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - just
   - Water
   - UI
   - RoadLayer
   - Obstakl
-  - 
+  - Enemy
   - 
   - 
   - 
