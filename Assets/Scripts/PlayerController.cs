@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour
     public float throwForce = 10f; // Сила броска
     public float throwAngle = 45f; // Угол броска
 
+    private GameObject activeBomb; // Текущая активная бомба
+
     void Start()
     {
         startGamePosition = transform.position;
@@ -90,6 +92,16 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && bombCount > 0)
         {
             ThrowBomb();
+        }
+        else if (Input.GetKeyDown(KeyCode.Space) && activeBomb != null)
+        {
+            // Активировать бомбу
+            Bomb bombScript = activeBomb.GetComponent<Bomb>();
+            if (bombScript != null)
+            {
+                bombScript.ActivateBomb();
+                activeBomb = null;
+            }
         }
     }
 
@@ -162,6 +174,7 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(throwDirection * throwForce, ForceMode.VelocityChange);
         }
         bombCount--;
+        activeBomb = bomb;
     }
 
     Vector3 CalculateThrowDirection()

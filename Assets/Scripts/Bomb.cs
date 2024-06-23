@@ -5,36 +5,50 @@ using UnityEngine;
 public class Bomb : MonoBehaviour
 {
     public int damage = 1; // Урон от бомбы
+    public GameObject explosionEffect;
+    public float explosionDelay = 3.0f; // Задержка перед взрывом
 
-    void OnCollisionEnter(Collision collision)
+    private bool isActivated = false; // Флаг для активации бомбы
+
+    void Start()
     {
-        if (collision.gameObject.CompareTag("Player"))
+        // Бомба будет взорвана только при активации
+    }
+
+    public void ActivateBomb()
+    {
+        if (!isActivated)
         {
-            // Найти компонент PlayerController и увеличить количество бомб
-            PlayerController playerController = collision.gameObject.GetComponent<PlayerController>();
-            if (playerController != null)
-            {
-                playerController.bombCount++;
-                Debug.Log("Player picked up a bomb. Total bombs: " + playerController.bombCount);
-            }
-            // Уничтожить бомбу
-            Destroy(gameObject);
+            isActivated = true;
+            StartCoroutine(ExplodeAfterDelay());
         }
-        else if (collision.gameObject.CompareTag("Enemy"))
+    }
+
+    IEnumerator ExplodeAfterDelay()
+    {
+        // Задержка перед взрывом
+        yield return new WaitForSeconds(explosionDelay);
+        Explode();
+    }
+
+    void Explode()
+    {
+        // Создание эффекта взрыва
+        GameObject explosion = Instantiate(explosionEffect, transform.position, transform.rotation);
+        // Нанесение урона всем врагам в радиусе взрыва
+        Collider[] colliders = Physics.OverlapSphere(transform.position, 5f); // Радиус взрыва
+        foreach (Collider nearbyObject in colliders)
         {
-            // Найти компонент Enemy и нанести урон
-            Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+            Enemy enemy = nearbyObject.GetComponent<Enemy>();
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
                 Debug.Log("Bomb hit enemy. Enemy health: " + enemy.health);
             }
-            // Уничтожить бомбу
-            Destroy(gameObject);
         }
-        else
-        {
-            Debug.Log("Bomb collided with: " + collision.gameObject.name);
-        }
+        // Уничтожение эффекта взрыва через короткое время
+        Destroy(explosion, 2f); // Длительность эффекта взрыва
+        // Уничтожение бомбы
+        Destroy(gameObject);
     }
 }
