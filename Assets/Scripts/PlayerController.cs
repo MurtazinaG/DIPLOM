@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -157,11 +156,18 @@ public class PlayerController : MonoBehaviour
         Rigidbody rb = bomb.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            // Рассчитываем направление броска под углом, учитывая ориентацию персонажа
+            // Рассчитываем направление броска, учитывая ориентацию персонажа
             Vector3 throwDirection = CalculateThrowDirection();
             rb.AddForce(throwDirection * throwForce, ForceMode.VelocityChange);
         }
         bombCount--;
+
+        // Запускаем логику взрыва бомбы
+        Bomb bombComponent = bomb.GetComponent<Bomb>();
+        if (bombComponent != null)
+        {
+            bombComponent.ThrowBomb();
+        }
     }
 
     Vector3 CalculateThrowDirection()
@@ -183,7 +189,7 @@ public class PlayerController : MonoBehaviour
         if (other.gameObject.CompareTag("BombPickup"))
         {
             bombCount++;
-            Debug.Log("Bomb picked up. Current bomb count: " + bombCount);
+            Debug.Log("Подобрана бомба. Текущее количество бомб: " + bombCount);
             Destroy(other.gameObject);
         }
     }
