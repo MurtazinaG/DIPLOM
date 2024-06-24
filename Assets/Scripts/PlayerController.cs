@@ -25,6 +25,9 @@ public class PlayerController : MonoBehaviour
     public float throwForce = 10f; // Сила броска
     public float throwAngle = 45f; // Угол броска
 
+    public HealthSystem healthSystem; // Ссылка на систему здоровья
+    public int leverDamage = 1; // Количество урона при взаимодействии с рычагом
+
     void Start()
     {
         startGamePosition = transform.position;
@@ -136,6 +139,10 @@ public class PlayerController : MonoBehaviour
                 Time.timeScale = 0f;
                 GameIsPaused = true;
             }
+            else if (hit.transform.tag == "Lever")
+            {
+                ApplyLeverDamage();
+            }
             return false;
         }
 
@@ -148,6 +155,14 @@ public class PlayerController : MonoBehaviour
         }
 
         return false;
+    }
+
+    void ApplyLeverDamage()
+    {
+        if (healthSystem != null)
+        {
+            healthSystem.TakeDamage(leverDamage);
+        }
     }
 
     void ThrowBomb()

@@ -10,6 +10,7 @@ public class HealthSystem : MonoBehaviour
     public Image[] lives;
     public Sprite fullLive;
     public Sprite emptyLive;
+    public GameObject loseMenuUI; // —сылка на окно проигрыша
 
     void Start()
     {
@@ -51,5 +52,18 @@ public class HealthSystem : MonoBehaviour
             health = 0;
         }
         UpdateLivesUI();
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        if (loseMenuUI != null)
+        {
+            loseMenuUI.SetActive(true);
+        }
+        Time.timeScale = 0f; // ќстанавливаем игру
     }
 }
