@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     public float laneChangeSpeed = 6.0f;
     public float angle;
     public float lined = 1.5f;
+    public int level;
 
     public static bool GameIsPaused = false;
     public GameObject WinMenuUI;
@@ -136,6 +137,8 @@ public class PlayerController : MonoBehaviour
             {
                 animator.SetBool("Dance", true);
                 WinMenuUI.SetActive(true);
+                PlayerPrefs.SetInt("LevelComplete", level);
+
                 Time.timeScale = 0f;
                 GameIsPaused = true;
             }
