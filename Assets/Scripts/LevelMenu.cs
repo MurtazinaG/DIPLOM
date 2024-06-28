@@ -12,25 +12,31 @@ public class LevelMenu : MonoBehaviour
     int levelComplete;
     void Start()
     {
+        Time.timeScale = 1.0f;
+
         levelComplete = PlayerPrefs.GetInt("LevelComplete");
         level2B.interactable = false;
         level3B.interactable = false; 
+
+        Debug.Log(levelComplete);
         level4B.interactable = false;
 
         switch (levelComplete)
         {
-            case 1:
+            case 1:{
                 level2B.interactable = true;
-                break;
-                case 2:
+                    break;
+                }
+            case 2:{
                 level2B.interactable = true;
                 level3B.interactable= true;
-                break;
-                case 3:
+                    break;
+                }
+            case 3:{
                 level2B.interactable = true;
                 level3B.interactable = true;
                 level4B.interactable = true; 
-                break;
+                break;}
 
         }
     }
@@ -45,7 +51,7 @@ public class LevelMenu : MonoBehaviour
         level2B.interactable = false;
         level3B.interactable = false;
         level4B.interactable = false;
-        PlayerPrefs.SetInt("LevelComplete", 0);
+        //PlayerPrefs.SetInt("LevelComplete", 0);
         //PlayerPrefs.DeleteAll();
     }
 
